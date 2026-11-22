@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#070b12">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Celestial Chess">
+<meta name="mobile-web-app-capable" content="yes">
+<title>THE CELESTIAL CHESS CHAMPIONSHIP — Jeriel vs Loganathan</title>
+<link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+
+<!-- ============ 3D STAGE ============ -->
+<div id="stage">
+  <canvas id="view"></canvas>
+  <div class="vignette"></div>
+  <div class="sunflare" id="sunflare"></div>
+</div>
+
+<div id="board2dWrap" class="board2d-wrap hidden"><div id="board2d" class="board2d" role="grid" aria-label="2D chess board"></div></div>
+
+<!-- ============ INTRO OVERLAY ============ -->
+<div class="intro hidden" id="intro">
+  <div class="dark-overlay" id="darkVignette" style="opacity:1"></div>
+
+  <!-- scene 1 -->
+  <div class="scene hidden" id="sceneDark">
+    <div class="dark-text" id="darkText">THE UNKNOWN WORLD</div>
+  </div>
+
+  <!-- scene 2 -->
+  <div class="scene hidden" id="sceneAnnouncer">
+    <div class="announcer">
+      <div class="ladies">LADIES AND GENTLEMEN</div>
+      <div class="ready">ARE YOU READY?</div>
+      <div class="welcome">WELCOME TO THE<br><span>CELESTIAL CHESS CHAMPIONSHIP</span></div>
+    </div>
+  </div>
+
+  <!-- scene 3 -->
+  <div class="scene hidden" id="sceneEntrance">
+    <div class="entrance-card" id="entranceCard">
+      <div class="entrance-label" id="entranceLabel">PLAYER 01</div>
+      <div class="entrance-name" id="entranceName">LOGANATHAN</div>
+      <div class="entrance-rule"></div>
+    </div>
+  </div>
+
+  <!-- scene 4 -->
+  <div class="scene hidden" id="sceneConfrontation">
+    <div class="confrontation">
+      <div class="conf-names">
+        <span class="cn">LOGANATHAN</span>
+        <span class="vs">VS</span>
+        <span class="cn gold">JERIEL</span>
+      </div>
+      <div class="conf-title">THE CELESTIAL CHESS CHAMPIONSHIP</div>
+      <div class="conf-500">500 MATCHES</div>
+      <div class="conf-rivalry">A RIVALRY BUILT ONE MOVE AT A TIME</div>
+      <div class="conf-match" id="confMatch">CHAMPIONSHIP MATCH 001 / 500</div>
+      <div class="conf-colors" id="confColors">JERIEL — WHITE · LOGANATHAN — BLACK</div>
+    </div>
+  </div>
+
+  <!-- scene 5 -->
+  <div class="scene hidden" id="sceneFinal">
+    <div class="finale">
+      <div class="final-line">THE CHESSBOARD AWAITS</div>
+      <button class="enter-btn" id="btnEnter">ENTER THE CELESTIAL WORLD</button>
+    </div>
+  </div>
+
+  <button class="skip-btn" id="btnSkip">SKIP INTRO</button>
+</div>
+
+<!-- ============ LOGIN ============ -->
+<div class="login hidden" id="login">
+  <div class="login-box">
+    <div class="login-crest">&#9819;</div>
+    <h1>THE CELESTIAL CHESS CHAMPIONSHIP</h1>
+    <p class="login-sub">500 MATCHES &middot; TWO MINDS &middot; ONE ETERNAL CHAMPIONSHIP</p>
+
+    <p class="login-ask" id="loginAsk">Choose your identity</p>
+    <div class="player-buttons">
+      <button class="player-btn" data-player="loganathan">
+        <span class="pb-key">PLAYER 01</span>
+        <span class="pb-name">LOGANATHAN</span>
+      </button>
+      <button class="player-btn gold-btn" data-player="jeriel">
+        <span class="pb-key">PLAYER 02</span>
+        <span class="pb-name">JERIEL</span>
+      </button>
+    </div>
+
+    <div class="login-invite hidden" id="loginInvite">
+      You have been personally invited to <b id="inviteMatch">MATCH 001</b>.
+      Enter as <b id="inviteWho">LOGANATHAN</b> to take your seat.
+    </div>
+
+    <p class="login-note" id="loginNote">Tap your name to enter. Each phone stays signed in as that player.</p>
+  </div>
+</div>
+
+<!-- ============ NEW GAME / INVITATION LOBBY ============ -->
+<div class="lobby hidden" id="lobby">
+  <div class="lobby-box">
+    <h2 id="lobbyTitle">THE CHAMPIONSHIP AWAITS</h2>
+    <div class="lobby-me">SIGNED IN AS <b id="lobbyMe">JERIEL</b></div>
+
+    <div class="lobby-actions" id="lobbyActions">
+      <button class="btn-primary" id="btnNewGame">NEW GAME</button>
+      <button class="btn-ghost hidden" id="btnResume">RESUME MATCH 001</button>
+    </div>
+
+    <div style="margin:16px 0;line-height:2" aria-label="Player directory">
+      <div>JERIEL · <b id="jerielStatus">OFFLINE</b></div>
+      <div>LOGANATHAN · <b id="loganathanStatus">OFFLINE</b></div>
+      <button class="btn-ghost" id="btnChallenge">CHALLENGE</button>
+    </div>
+    <div id="challengeNotice" class="hidden" role="status">
+      <p id="challengeText"></p>
+      <button class="btn-primary" id="btnAccept">ACCEPT</button>
+      <button class="btn-ghost" id="btnDecline">DECLINE</button>
+    </div>
+    <div class="lobby-invite hidden" id="lobbyInvite">
+      <div class="match-ready" id="lobbyInviteTitle"></div>
+      <p>Match code: <strong id="matchCode" style="font-size:1.5em;letter-spacing:.18em"></strong></p>
+      <p class="lobby-note" id="challengeState">Waiting for the other player.</p>
+    </div>
+    <div style="margin:16px 0">
+      <label for="codeInput">JOIN WITH SIX-DIGIT CODE</label><br>
+      <input id="codeInput" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="000000" style="padding:10px;width:120px;color:#222">
+      <button class="btn-ghost" id="btnJoinCode">JOIN</button>
+    </div>
+
+    <p class="lobby-note" id="lobbyNote">Each match is numbered and saved automatically on the server.</p>
+    <button class="btn-ghost" id="btnSignOut" style="margin-top:14px">SIGN OUT OF THIS PHONE</button>
+  </div>
+</div>
+
+<!-- ============ WAITING / COUNTDOWN ============ -->
+<div class="waiting hidden" id="waiting">
+  <div class="wait-card">
+    <div class="wait-title" id="waitTitle">JERIEL HAS ENTERED THE CHAMPIONSHIP</div>
+    <div class="wait-ownstatus" id="waitOwnStatus">YOUR STATUS: <span class="on">ONLINE</span></div>
+    <div class="wait-sub" id="waitSub">WAITING FOR LOGANATHAN…</div>
+    <div class="wait-timer" id="waitTimer">00:00:01</div>
+    <div class="wait-countdown hidden" id="waitCountdown">5</div>
+    <div class="wait-note" id="waitNote"></div>
+    <button class="link-btn" id="btnDismissWait">ENTER THE BOARD →</button>
+  </div>
+</div>
+
+<!-- ============ COUNTDOWN OVERLAY ============ -->
+<div class="countdown hidden" id="countdown">
+  <div class="cd-number" id="cdNumber">5</div>
+  <div class="cd-label">BOTH PLAYERS ONLINE</div>
+  <div class="cd-sub" id="cdSub">LET THE MATCH BEGIN</div>
+</div>
+
+<!-- ============ GAME HUD ============ -->
+<div class="hud hidden" id="hud">
+  <div class="hud-top">
+    <div class="player-panel top-opponent" id="panelOpponent">
+      <div class="pp-name" id="oppName">LOGANATHAN</div>
+      <div class="pp-row">
+        <span class="pp-color" id="oppColor">BLACK</span>
+        <span class="pp-dot" id="oppDot"></span>
+        <span class="pp-status" id="oppStatus">OFFLINE</span>
+      </div>
+      <div id="oppClock" style="font-size:18px;color:#f8d992;font-variant-numeric:tabular-nums"></div>
+      <div class="pp-captured" id="oppCaptured"></div>
+      <div class="hud-center">
+        <div class="turn-banner" id="turnBanner">WAITING FOR PLAYERS</div>
+        <div class="save-chip" id="saveChip">MATCH POSITION SAVED</div>
+      </div>
+    </div>
+    <div class="match-chip" id="matchChip">MATCH 001 / 500</div>
+  </div>
+
+
+  <div class="hud-bottom">
+    <div class="player-panel bottom-me" id="panelMe">
+      <div class="pp-name" id="meName">JERIEL</div>
+      <div class="pp-row">
+        <span class="pp-color" id="meColor">WHITE</span>
+        <span class="pp-dot on" id="meDot"></span>
+        <span class="pp-status" id="meStatus">ONLINE</span>
+      </div>
+      <div id="meClock" style="font-size:18px;color:#f8d992;font-variant-numeric:tabular-nums"></div>
+      <div class="pp-captured" id="meCaptured"></div>
+    </div>
+    <div class="controls">
+      <button id="btnView2d" title="Switch between 2D and 3D" aria-label="Switch between 2D and 3D">2D</button>
+      <button id="btnYoutube" title="Search YouTube music" aria-label="YouTube music">♫</button>
+      <button id="btnFlipBoard" title="Flip the board" aria-label="Flip the board">⇄</button>
+      <button id="btnHistory" title="Move history" aria-label="Move history">☷</button>
+      <button id="btnCamReset" title="Reset camera">⟲</button>
+      <button id="btnCamTop" title="Top view">▣</button>
+      <button id="btnCamIso" title="Cinematic view">◈</button>
+      <button id="btnCamSky" title="Stand and watch the clouds">❄</button>
+      <button id="btnCamVoyage" title="Voyage through the clouds">➤</button>
+      <button id="btnWalk" title="Walk around the palace">🚶</button>
+      <button id="btnGestures" title="Send a gesture">✦</button>
+      <button id="btnChat" title="Chat together">💬</button>
+      <button id="btnArchive" title="Our memory gallery">▤</button>
+      <button id="btnSound" title="Sound settings">🔊</button>
+      <button id="btnSignOutHud" title="Sign out of this device">⏻</button>
+      <button id="btnDraw" title="Offer a draw" aria-label="Offer a draw">½</button>
+      <button id="btnResign" class="danger" title="Resign">🏳</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PAUSE OVERLAY ============ -->
+<div class="pause hidden" id="pause">
+  <div class="pause-card">
+    <div class="pause-title" id="pauseTitle">MATCH 001 — PAUSED</div>
+    <div class="pause-reason" id="pauseReason">OPPONENT DISCONNECTED</div>
+    <div class="pause-saved">✓ YOUR GAME HAS BEEN SAVED</div>
+    <div class="pause-wait">WAITING FOR RECONNECTION…</div>
+    <div class="pause-dots"><span></span><span></span><span></span></div>
+  </div>
+</div>
+
+<!-- ============ MODALS ============ -->
+<div class="modal hidden" id="modalYoutube">
+ <div class="modal-box" style="max-width:560px;width:94%;text-align:left">
+  <h3>YOUTUBE MUSIC</h3><p>Search on YouTube, then paste a video link below to play it here when embedding is available. Music uses extra data and plays separately on each phone.</p>
+  <form id="youtubeSearch"><input id="youtubeQuery" placeholder="Search for a song" aria-label="Search songs" required><button type="submit">SEARCH YOUTUBE ↗</button></form>
+  <form id="youtubePlay"><input id="youtubeLink" placeholder="Paste a YouTube video link" aria-label="YouTube video link" required><button type="submit">PLAY HERE</button></form>
+  <div id="youtubePlayer"></div><div class="modal-actions"><button id="youtubeStop" type="button">STOP MUSIC</button><button id="youtubeClose" type="button">CLOSE</button></div>
+ </div>
+</div>
+
+<div class="modal hidden" id="modalHistory">
+  <div class="modal-box wide" style="text-align:left">
+    <h3>MOVE HISTORY</h3>
+    <div id="historyList" role="log" aria-label="Chess move history" style="max-height:300px;overflow:auto;line-height:1.8;color:#f7e5bd;letter-spacing:.04em"></div>
+    <div class="modal-actions" style="margin-top:16px"><button class="gold" id="btnHistoryClose">CLOSE</button></div>
+  </div>
+</div>
+
+<div class="modal hidden" id="modalDraw">
+  <div class="modal-box">
+    <h3>DRAW OFFER</h3>
+    <p id="drawPrompt">Offer a draw to the other player?</p>
+    <div class="modal-actions">
+      <button class="gold" id="btnDrawConfirm">OFFER DRAW</button>
+      <button class="ghost" id="btnDrawDecline">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="modalResign">
+  <div class="modal-box">
+    <h3 id="resignTitle">JERIEL WANTS TO RESIGN</h3>
+    <p>ARE YOU SURE?</p>
+    <div class="modal-actions">
+      <button class="ghost" id="btnResignCancel">CANCEL</button>
+      <button class="danger" id="btnResignConfirm">CONFIRM RESIGNATION</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="modalPromo">
+  <div class="modal-box">
+    <h3>CHOOSE PROMOTION</h3>
+    <div class="promo-row">
+      <button data-promo="q" class="promo-btn">♕</button>
+      <button data-promo="r" class="promo-btn">♖</button>
+      <button data-promo="b" class="promo-btn">♗</button>
+      <button data-promo="n" class="promo-btn">♘</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="modalSound">
+  <div class="modal-box wide">
+    <h3>SOUND</h3>
+    <label class="slider-row">Master <input type="range" id="volMaster" min="0" max="100" value="100"></label>
+    <label class="slider-row">Music <input type="range" id="volMusic" min="0" max="100" value="32"></label>
+    <label class="slider-row">Announcer <input type="range" id="volAnn" min="0" max="100" value="100"></label>
+    <label class="slider-row">Environment <input type="range" id="volAmb" min="0" max="100" value="50"></label>
+    <label class="slider-row">Chess <input type="range" id="volChess" min="0" max="100" value="80"></label>
+    <div class="slider-row">Quality
+      <select id="qualitySelect">
+        <option value="high">HIGH</option>
+        <option value="balanced" selected>BALANCED</option>
+        <option value="performance">PERFORMANCE</option>
+      </select>
+    </div>
+    <div class="modal-actions"><button class="gold" id="btnSoundClose">DONE</button></div>
+  </div>
+</div>
+
+<div class="modal hidden" id="modalArchive">
+  <div class="modal-box wide archive-box">
+    <h3>OUR MEMORY GALLERY ✦</h3>
+    <p style="letter-spacing:.08em;text-transform:none">Every match is a chapter in your shared world.</p>
+    <div class="stats-grid">
+      <div class="stat"><span id="stTotal">0</span><label>TOTAL MATCHES</label></div>
+      <div class="stat gold"><span id="stJeriel">0</span><label>JERIEL WINS</label></div>
+      <div class="stat"><span id="stLogan">0</span><label>LOGANATHAN WINS</label></div>
+      <div class="stat"><span id="stDraws">0</span><label>TOTAL DRAWS</label></div>
+      <div class="stat"><span id="stUnfinished">0</span><label>UNFINISHED</label></div>
+      <div class="stat"><span id="stResign">0</span><label>RESIGNATIONS</label></div>
+    </div>
+    <div class="archive-list" id="archiveList"></div>
+    <div class="modal-actions"><button class="gold" id="btnArchiveClose">CLOSE</button></div>
+  </div>
+</div>
+
+<div id="replayPanel" class="hidden" style="position:fixed;z-index:55;left:50%;bottom:95px;transform:translateX(-50%);width:min(94%,500px);padding:12px;text-align:center;background:rgba(10,10,26,.94);border:1px solid #b89b5d;border-radius:8px;color:#f8e3ad">
+  <div id="replayTitle" style="font-size:12px;letter-spacing:.1em"></div>
+  <div id="replayProgress" style="font-size:12px;margin:8px 0"></div>
+  <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+    <button id="replayPrev" style="padding:8px">◀ PREVIOUS</button>
+    <button id="replayNext" style="padding:8px">NEXT ▶</button>
+    <button id="replayExit" style="padding:8px">RETURN TO LIVE GAME</button>
+  </div>
+  <div style="font-size:10px;margin-top:6px">Your live match and clock continue while viewing.</div>
+</div>
+
+<div class="modal hidden" id="modalResult">
+  <div class="modal-box">
+    <h3 id="resultTitle">CHECKMATE</h3>
+    <p id="resultText">JERIEL WINS</p>
+    <div class="modal-actions">
+      <button class="ghost" id="btnResultClose">VIEW BOARD</button>
+      <button class="gold" id="btnRematch">NEW MATCH</button>
+    </div>
+  </div>
+</div>
+
+<div id="walkPanel" class="hidden" style="position:fixed;z-index:45;left:16px;top:35%;padding:12px;border:1px solid #c9aa6a;border-radius:8px;background:rgba(9,10,24,.88);text-align:center;color:#f2daa5">
+  <div style="font-size:10px;letter-spacing:.12em;margin-bottom:8px">EXPLORE THE PALACE</div>
+  <button data-walk="north" aria-label="Walk north" style="padding:10px">▲</button><br>
+  <button data-walk="west" aria-label="Walk west" style="padding:10px">◀</button>
+  <button data-walk="south" aria-label="Walk south" style="padding:10px">▼</button>
+  <button data-walk="east" aria-label="Walk east" style="padding:10px">▶</button>
+  <div style="font-size:10px;margin-top:8px">Tap to take steps</div>
+</div>
+
+<div class="modal hidden" id="modalGestures">
+  <div class="modal-box">
+    <h3>SEND A GESTURE</h3>
+    <div class="modal-actions" id="gestureChoices">
+      <button class="gold" data-gesture="wave">👋 WAVE</button>
+      <button class="gold" data-gesture="heart">♡ HEART</button>
+      <button class="gold" data-gesture="celebrate">✦ CELEBRATE</button>
+    </div>
+    <div class="modal-actions" style="margin-top:14px"><button id="btnGesturesClose" type="button">CLOSE</button></div>
+  </div>
+</div>
+
+<div class="modal hidden" id="modalChat">
+  <div class="modal-box wide" style="text-align:left">
+    <h3>YOUR PRIVATE CHAT</h3>
+    <div id="chatMessages" role="log" aria-live="polite" style="height:240px;overflow-y:auto;padding:12px;background:rgba(0,0,0,.3);border:1px solid var(--line);line-height:1.5"></div>
+    <form id="chatForm" style="display:flex;gap:8px;margin-top:14px">
+      <input id="chatInput" maxlength="300" autocomplete="off" placeholder="Write a message…" aria-label="Message" style="flex:1;min-width:0;padding:12px;background:#fff;color:#111;border-radius:4px">
+      <button type="submit" style="padding:10px;color:#f7dc9c;background:#292334;border:1px solid #b69a67">SEND</button>
+    </form>
+    <div class="modal-actions" style="margin-top:14px"><button class="ghost" id="btnChatClose" type="button">CLOSE</button></div>
+  </div>
+</div>
+
+<div class="modal hidden" id="modalClock" style="z-index:100">
+  <div class="modal-box">
+    <h3>CHOOSE THE CHESS CLOCK</h3>
+    <p id="clockPrompt">Choose minutes for each player.</p>
+    <div class="modal-actions" id="clockChoices">
+      <button class="gold" data-minutes="1">1 MIN</button><button class="gold" data-minutes="3">3 MIN</button>
+      <button class="gold" data-minutes="5">5 MIN</button><button class="gold" data-minutes="10">10 MIN</button>
+      <button class="gold" data-minutes="15">15 MIN</button><button class="gold" data-minutes="30">30 MIN</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/js/engine-bridge.js"></script>
+<!-- Classic (non-module) build: works when the page is opened straight from a disk or a
+     Drive preview, where module scripts are blocked. Same app, bundled from the sources. -->
+<script type="module" src="/js/app.js"></script>
+<noscript><p style="color:#e8d9b0;font:16px system-ui;padding:24px">This game needs JavaScript.</p></noscript>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+  }
+</script>
+</body>
+</html>
